@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ short_url.short_key }} - URL Details{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h2 class="mb-0">Short URL Details</h2>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-success">
+                    <strong>Success!</strong> Your short URL has been created.
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Short URL:</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control form-control-lg" value="{{ full_short_url }}" id="shortUrlInput" readonly>
+                        <button class="btn btn-primary" type="button" onclick="copyToClipboard()">
+                            Copy
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Original URL:</label>
+                    <p class="text-break">{{ short_url.original_url }}</p>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Short Key:</label>
+                        <p><span class="badge bg-primary fs-6">{{ short_url.short_key }}</span></p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Click Count:</label>
+                        <p><span class="badge bg-info fs-6">{{ short_url.click_count }} clicks</span></p>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Created:</label>
+                    <p>{{ short_url.created_at|date:"F d, Y at g:i A" }}</p>
+                </div>
+                
+                {% if short_url.expires_at %}
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Expires:</label>
+                    <p>
+                        {{ short_url.expires_at|date:"F d, Y at g:i A" }}
+                        {% if short_url.is_expired %}
+                            <span class="badge bg-danger">Expired</span>
+                        {% else %}
+                            <span class="badge bg-success">Active</span>
+                        {% endif %}
+                    </p>
+                </div>
+                {% endif %}
+                
+                <div class="d-flex gap-2">
+                    <a href="{% url 'home' %}" class="btn btn-primary">Back to Dashboard</a>
+                    <a href="{% url 'create_short_url' %}" class="btn btn-success">Create Another</a>
+                    <a href="{% url 'edit_short_url' short_url.short_key %}" class="btn btn-secondary">Edit</a>
+                    <a href="{% url 'delete_short_url' short_url.short_key %}" class="btn btn-danger">Delete</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-body">
+                <h5 class="card-title">QR Code</h5>
+                <p>Scan this QR code to access your short URL:</p>
+                <div class="text-center">
+                    <img src="{{ qr_code }}" alt="QR Code for {{ full_short_url }}" class="img-fluid" style="max-width: 300px;">
+                </div>
+                <p class="text-center mt-3">
+                    <small class="text-muted">Download or share this QR code to make your URL easily accessible.</small>
+                </p>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-body">
+                <h5 class="card-title">Test Your Short URL</h5>
+                <p>Click the link below to test your short URL:</p>
+                <a href="{{ full_short_url }}" target="_blank" class="btn btn-outline-primary">
+                    {{ full_short_url }}
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyToClipboard() {
+    const input = document.getElementById('shortUrlInput');
+    input.select();
+    input.setSelectionRange(0, 99999); // For mobile devices
+    
+    navigator.clipboard.writeText(input.value).then(function() {
+        alert('Short URL copied to clipboard!');
+    }, function(err) {
+        console.error('Could not copy text: ', err);
+    });
+}
+</script>
+{% endblock %}

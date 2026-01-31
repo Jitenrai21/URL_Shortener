@@ -1,0 +1,43 @@
+URL_Shortener/
+│
+├── url_shortener/                 # Main project settings (matches your folder)
+│   ├── settings.py                # Django configuration
+│   ├── urls.py                    # Root URL routing
+│   ├── wsgi.py                    # WSGI application entry
+│   └── asgi.py                    # ASGI application entry
+│
+├── shortenerApp/                  # URL shortener application
+│   ├── __init__.py
+│   ├── admin.py                   # Admin panel configuration
+│   ├── apps.py
+│   ├── forms.py                   # Form definitions
+│   ├── models.py                  # Database models (ShortURL)
+│   ├── tests.py
+│   ├── utils.py                   # Helper functions (Base62 encoding, etc.)
+│   ├── views.py                   # View functions and logic
+│   └── urls.py                    # App-specific URL patterns (recommended to add)
+│
+├── templates/                     # HTML templates
+│   ├── base.html                  # Base template with navigation
+│   ├── home.html                  # Dashboard and URL list
+│   ├── registration/              # Authentication templates
+│   │   ├── login.html
+│   │   └── register.html
+│   └── shortener/                 # URL management templates
+│       ├── create_url.html
+│       ├── delete_url.html
+│       ├── edit_url.html
+│       └── url_detail.html
+│
+├── static/                        # Static files (CSS, JS, images)
+│   └── css/
+│       └── style.css
+│
+├── media/                         # User-uploaded files
+│
+├── demo_vid/                      # Demo video folder
+│   └── demo.mp4
+│
+├── manage.py                      # Django management script
+├── requirements.txt               # Python dependencies
+└── README.md                      # Project documentation
