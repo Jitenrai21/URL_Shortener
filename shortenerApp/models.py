@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.urls import reverse
+from django.utils import timezone
 
 
 class ShortURL(models.Model):
@@ -11,6 +12,7 @@ class ShortURL(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     click_count = models.IntegerField(default=0)
     is_active = models.BooleanField(default=True)
+    expires_at = models.DateTimeField(null=True, blank=True, help_text="Optional expiration date and time")
     
     class Meta:
         ordering = ['-created_at']
@@ -28,3 +30,9 @@ class ShortURL(models.Model):
         """Increment the click count"""
         self.click_count += 1
         self.save(update_fields=['click_count'])
+    
+    def is_expired(self):
+        """Check if the short URL has expired"""
+        if self.expires_at is None:
+            return False
+        return timezone.now() > self.expires_at

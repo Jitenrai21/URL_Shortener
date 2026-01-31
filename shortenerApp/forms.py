@@ -40,10 +40,20 @@ class URLShortenForm(forms.ModelForm):
         label='Custom Short Key (Optional)',
         help_text='Leave blank for auto-generated key. Only letters, numbers allowed.'
     )
+    expires_at = forms.DateTimeField(
+        required=False,
+        widget=forms.DateTimeInput(attrs={
+            'class': 'form-control',
+            'type': 'datetime-local',
+            'placeholder': 'Expiration date and time (optional)'
+        }),
+        label='Expiration Date/Time (Optional)',
+        help_text='Leave blank for no expiration.'
+    )
     
     class Meta:
         model = ShortURL
-        fields = ['original_url']
+        fields = ['original_url', 'expires_at']
     
     def clean_custom_key(self):
         """Validate custom key"""

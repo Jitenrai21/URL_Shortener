@@ -7,6 +7,9 @@ from django.http import Http404
 from .forms import UserRegistrationForm, URLShortenForm
 from .models import ShortURL
 from .utils import generate_short_key
+import qrcode
+import io
+import base64
 
 
 def register(request):
@@ -68,9 +71,31 @@ def url_detail(request, short_key):
     # Build the full short URL
     full_short_url = request.build_absolute_uri(f'/{short_url.short_key}')
     
+    # Generate QR code pointing to the original URL (not the short URL)
+    # This allows the QR code to work on any device without needing access to the local server
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(short_url.original_url)
+    qr.make(fit=True)
+    
+    # Create QR code image
+    img = qr.make_image(fill_color="black", back_color="white")
+    
+    # Convert to base64 for embedding in HTML
+    buffer = io.BytesIO()
+    img.save(buffer, format='PNG')
+    buffer.seek(0)
+    qr_code_base64 = base64.b64encode(buffer.getvalue()).decode()
+    qr_code_data_uri = f"data:image/png;base64,{qr_code_base64}"
+    
     return render(request, 'shortener/url_detail.html', {
         'short_url': short_url,
-        'full_short_url': full_short_url
+        'full_short_url': full_short_url,
+        'qr_code': qr_code_data_uri
     })
 
 
@@ -78,6 +103,11 @@ def redirect_short_url(request, short_key):
     """View to redirect from short URL to original URL"""
     try:
         short_url = get_object_or_404(ShortURL, short_key=short_key, is_active=True)
+        
+        # Check if URL has expired
+        if short_url.is_expired():
+            messages.error(request, 'This short URL has expired and is no longer available.')
+            return redirect('home')
         
         # Increment click count
         short_url.increment_click()
