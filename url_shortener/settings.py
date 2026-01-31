@@ -11,10 +11,12 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+import dj_database_url
+import django_heroku
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -24,9 +26,6 @@ SECRET_KEY = "django-insecure-pqfoo#m&!p@&9i#ik6u%^b49v&ic)i5=(aw!)_uk0mj=ysnw7)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-
-ALLOWED_HOSTS = []
-
 
 # Application definition
 
@@ -81,6 +80,11 @@ DATABASES = {
     }
 }
 
+# Activate Django-Heroku.
+django_heroku.settings(locals())
+DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
+ALLOWED_HOSTS = ['*']
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
