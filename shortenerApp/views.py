@@ -1,9 +1,12 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .forms import UserRegistrationForm
+from django.http import Http404
+from .forms import UserRegistrationForm, URLShortenForm
+from .models import ShortURL
+from .utils import generate_short_key
 
 
 def register(request):
@@ -27,7 +30,93 @@ def register(request):
 @login_required
 def home(request):
     """Home page view - requires authentication"""
-    return render(request, 'home.html')
+    # Get user's short URLs
+    user_urls = ShortURL.objects.filter(user=request.user, is_active=True)
+    return render(request, 'home.html', {'user_urls': user_urls})
+
+
+@login_required
+def create_short_url(request):
+    """View to create a new short URL"""
+    if request.method == 'POST':
+        form = URLShortenForm(request.POST)
+        if form.is_valid():
+            short_url = form.save(commit=False)
+            short_url.user = request.user
+            
+            # Use custom key if provided, otherwise generate one
+            custom_key = form.cleaned_data.get('custom_key')
+            if custom_key:
+                short_url.short_key = custom_key
+            else:
+                short_url.short_key = generate_short_key()
+            
+            short_url.save()
+            messages.success(request, f'Short URL created successfully! Your short key is: {short_url.short_key}')
+            return redirect('url_detail', short_key=short_url.short_key)
+    else:
+        form = URLShortenForm()
+    
+    return render(request, 'shortener/create_url.html', {'form': form})
+
+
+@login_required
+def url_detail(request, short_key):
+    """View to display details of a short URL"""
+    short_url = get_object_or_404(ShortURL, short_key=short_key, user=request.user)
+    
+    # Build the full short URL
+    full_short_url = request.build_absolute_uri(f'/{short_url.short_key}')
+    
+    return render(request, 'shortener/url_detail.html', {
+        'short_url': short_url,
+        'full_short_url': full_short_url
+    })
+
+
+def redirect_short_url(request, short_key):
+    """View to redirect from short URL to original URL"""
+    try:
+        short_url = get_object_or_404(ShortURL, short_key=short_key, is_active=True)
+        
+        # Increment click count
+        short_url.increment_click()
+        
+        # Redirect to original URL
+        return redirect(short_url.original_url)
+    except Http404:
+        messages.error(request, 'Short URL not found or has been deactivated.')
+        return redirect('home')
+
+
+@login_required
+def delete_short_url(request, short_key):
+    """View to delete a short URL"""
+    short_url = get_object_or_404(ShortURL, short_key=short_key, user=request.user)
+    
+    if request.method == 'POST':
+        short_url.delete()
+        messages.success(request, 'Short URL deleted successfully.')
+        return redirect('home')
+    
+    return render(request, 'shortener/delete_url.html', {'short_url': short_url})
+
+
+@login_required
+def edit_short_url(request, short_key):
+    """View to edit a short URL"""
+    short_url = get_object_or_404(ShortURL, short_key=short_key, user=request.user)
+    
+    if request.method == 'POST':
+        form = URLShortenForm(request.POST, instance=short_url)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Short URL updated successfully.')
+            return redirect('url_detail', short_key=short_url.short_key)
+    else:
+        form = URLShortenForm(instance=short_url)
+    
+    return render(request, 'shortener/edit_url.html', {'form': form, 'short_url': short_url})
 
 
 class CustomLoginView(LoginView):

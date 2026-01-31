@@ -18,7 +18,11 @@ from django.contrib import admin
 from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
-from shortenerApp.views import register, home, CustomLoginView, CustomLogoutView
+from shortenerApp.views import (
+    register, home, CustomLoginView, CustomLogoutView,
+    create_short_url, url_detail, redirect_short_url,
+    delete_short_url, edit_short_url
+)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -26,6 +30,15 @@ urlpatterns = [
     path("login/", CustomLoginView.as_view(), name="login"),
     path("logout/", CustomLogoutView.as_view(), name="logout"),
     path("register/", register, name="register"),
+    
+    # URL shortener routes
+    path("shorten/", create_short_url, name="create_short_url"),
+    path("url/<str:short_key>/", url_detail, name="url_detail"),
+    path("url/<str:short_key>/edit/", edit_short_url, name="edit_short_url"),
+    path("url/<str:short_key>/delete/", delete_short_url, name="delete_short_url"),
+    
+    # Redirect route - must be last
+    path("<str:short_key>/", redirect_short_url, name="redirect_short_url"),
 ]
 
 # Serve media files in development
