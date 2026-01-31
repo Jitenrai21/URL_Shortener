@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: url-shortener
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn url_shortener.wsgi:application"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: False
+      - key: ALLOWED_HOSTS
+        sync: false
+
+databases:
+  - name: url-shortener-db
+    databaseName: url_shortener_db
+    user: url_shortener_user
+    plan: free
